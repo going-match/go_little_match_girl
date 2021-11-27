@@ -832,6 +832,10 @@ MonoBehaviour:
   damageEffectSpeed: 3
   speedUpValue: 0.25
   moveSpeed: 0.15
+  objects:
+  - {fileID: 1477051829}
+  - {fileID: 1078074707}
+  - {fileID: 42280683}
   playerLife: 1
 --- !u!1 &1328918254
 GameObject:

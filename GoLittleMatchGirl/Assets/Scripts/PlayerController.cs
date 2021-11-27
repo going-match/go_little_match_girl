@@ -25,7 +25,7 @@ public class PlayerController : MonoBehaviour
     [Range(0.1f, 1)]
     public float moveSpeed;
 
-
+    public GameObject[] objects;
     private Animator topAnim, bottomAnim;
     private SpriteRenderer topSR, bottomSR;
     private GameObject match;
@@ -49,6 +49,11 @@ public class PlayerController : MonoBehaviour
         canAttack = true;
         canJump = true;
         //canSlide = true;
+    }
+
+    private void Update()
+    {
+        PlayerHP();
     }
 
     private void FixedUpdate()
@@ -118,6 +123,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log("life:" + playerLife);
                     if (playerLife == 0)
                     {
+
                         SceneManager.LoadScene("GameOverScene");
                         topAnim.SetTrigger("gameOver");
                         bottomAnim.SetTrigger("gameOver");
@@ -164,6 +170,29 @@ public class PlayerController : MonoBehaviour
         canJump = jump;
         //canSlide = slide;
     }
+    private void PlayerHP()
+    {
+        if (playerLife == 3)
+        {
+            objects[0].gameObject.SetActive(true);
+            objects[1].gameObject.SetActive(true);
+            objects[2].gameObject.SetActive(true);
+        }
+        if (playerLife == 2)
+        {
+            objects[0].gameObject.SetActive(true);
+            objects[1].gameObject.SetActive(true);
+            objects[2].gameObject.SetActive(false);
+        }
+        if (playerLife == 1)
+        {
+            objects[0].gameObject.SetActive(true);
+            objects[1].gameObject.SetActive(false);
+            objects[2].gameObject.SetActive(false);
+        }
+
+    }
+
 
     // 처음 시작 시 중앙으로 달림
     private IEnumerator MoveCrt()
@@ -229,4 +258,6 @@ public class PlayerController : MonoBehaviour
         bottomAnim.Play("Player_Run_Bottom", -1, 0f);
         SetState(true, true);
     }
+
+   
 }
