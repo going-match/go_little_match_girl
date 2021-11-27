@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -30,7 +31,7 @@ public class PlayerController : MonoBehaviour
     private GameObject match;
     private Rigidbody2D rb;
     private Vector2 boxCastSize = new Vector2(0.4f, 0.05f);
-    private int playerLife = 3;
+    public int playerLife = 1;
     //private int speed = 1;
     private float boxCastMaxDistance = 0.75f;
     private bool isInvincibleMode, canJump, canAttack;
@@ -117,7 +118,7 @@ public class PlayerController : MonoBehaviour
                     Debug.Log("life:" + playerLife);
                     if (playerLife == 0)
                     {
-                        Debug.Log("GameOver");
+                        SceneManager.LoadScene("GameOverScene");
                         topAnim.SetTrigger("gameOver");
                         bottomAnim.SetTrigger("gameOver");
                     }

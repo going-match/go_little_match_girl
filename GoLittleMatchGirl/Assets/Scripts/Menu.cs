@@ -1,13 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class Menu : MonoBehaviour
 {
     public GameObject optionModal;
     public GameObject instructionModal;
+    public GameObject ExplainPanel;
+    public GameObject PeoplePanel;
+    public InstructionModel[] InstructionModel;
+
     public FadeIn fader;
+
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (InstructionModel[0].gameObject.activeSelf)
+            {
+                InstructionModel[0].Close();
+            }
+            if (InstructionModel[1].gameObject.activeSelf)
+            {
+                InstructionModel[1].Close();
+            }
+        }
+    }
 
     public void Open()
     {
@@ -48,11 +69,11 @@ public class Menu : MonoBehaviour
     }
     public void OnExplainButtonClicked()
     {
-        SceneManager.LoadScene("ExplainScene");
+        ExplainPanel.SetActive(true);
     }
     public void OnPeopleButtonClicked()
     {
-        SceneManager.LoadScene("PeopleScene");
+        PeoplePanel.SetActive(true);
     }
     public void OnQuitButtonClicked()
     {
@@ -79,5 +100,9 @@ public class Menu : MonoBehaviour
     {
         Application.Quit();
     }
-
+    public void Close()
+    {
+        Time.timeScale = 1f;
+        gameObject.SetActive(false);
+    }
 }
