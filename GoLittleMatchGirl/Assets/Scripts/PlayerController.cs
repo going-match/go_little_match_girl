@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,34 +8,25 @@ public class PlayerController : MonoBehaviour
     [Range(0.5f, 1.5f)]
     public float attackTime;
     [Range(0.5f, 1.5f)]
-    public float slideTime;
-    [Range(0.5f, 1.5f)]
     public float jumpTime;
-    [Range(1, 3)]
-    public float invincibleTime;
     [Range(100, 1000)]
     public int jumpForce;
     [Range(1, 3)]
     public float damageEffectSpeed;
-    [Range(0.25f, 0.5f)]
-    public float speedUpValue;
 
-    [Header("속도 테스트")]
-    [Range(0.1f, 1)]
-    public float moveSpeed;
+    private int invincibleTime = 1;
 
-    public GameObject[] objects;
     private Animator topAnim, bottomAnim;
     private SpriteRenderer topSR, bottomSR;
     private GameObject match;
     private Rigidbody2D rb;
     private Vector2 boxCastSize = new Vector2(0.4f, 0.05f);
-    public int playerLife = 1;
-    //private int speed = 1;
+    private float speed;
     private float boxCastMaxDistance = 0.75f;
     private bool isInvincibleMode, canJump, canAttack;
+    private bool isDKeyPressed;
 
-    private IEnumerator attackCrt, jumpCrt;
+    private IEnumerator jumpCrt;
 
     private void Start()
     {
@@ -48,91 +38,126 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         canAttack = true;
         canJump = true;
+        isDKeyPressed = false;
         //canSlide = true;
+
+        speed = GameManager.Instance.GetStageSpeed();
+        topAnim.speed = speed;
+        bottomAnim.speed = speed;
     }
 
     private void Update()
     {
-        PlayerHP();
+        // 게임 시작 전
+        if (!GameManager.Instance.IsStarted() && Input.GetKeyDown(KeyCode.Return))
+        {
+            GameManager.Instance.StartPlay();
+            topAnim.SetTrigger("gameStart");
+            bottomAnim.SetTrigger("gameStart");
+            StartCoroutine(MoveCenterCrt());
+        }
+
+        // 게임 실행 중
+        if (GameManager.Instance.IsPlaying())
+        {
+            #region 속도 테스트용 코드
+            //if (Input.GetKey(KeyCode.LeftArrow))
+            //{
+            //    transform.position -= new Vector3(moveSpeed, 0f, 0f);
+            //}
+
+            //if (Input.GetKey(KeyCode.RightArrow))
+            //{
+            //    transform.position += new Vector3(moveSpeed, 0f, 0f);
+            //}
+
+            //if (Input.GetKey(KeyCode.U))
+            //{
+            //    UpSpeed();
+            //}
+            #endregion
+
+            // ESC 키 누름; 게임 일시정지
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                topAnim.speed = 0f;
+                bottomAnim.speed = 0f;
+                GameManager.Instance.Pause();
+            }
+
+            // 점프
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                Debug.Log("just d");
+            }
+            if (Input.GetKeyDown(KeyCode.D) && canJump && IsOnGround())
+            {
+                Debug.Log("d");
+                isDKeyPressed = true;
+            }
+
+            // 성냥 던지기
+            if (canAttack && Input.GetKeyDown(KeyCode.K))
+            {
+                StartCoroutine(AttackCrt());
+            }
+
+            //// 슬라이드
+            //if (canSlide && Input.GetKey(KeyCode.Z) && !Input.GetKey(KeyCode.Space))
+            //{
+            //    Debug.Log("슬라이드");
+            //    slideCrt = SlideCrt();
+            //    StartCoroutine(slideCrt);
+            //}
+        }
+        else if (GameManager.Instance.IsPaused())
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                GameManager.Instance.ChangeScene(GameManager.SCENE.MAIN);
+            }
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                topAnim.speed = speed;
+                bottomAnim.speed = speed;
+                GameManager.Instance.Resume();
+            }
+        }
     }
 
     private void FixedUpdate()
     {
-        // 게임시작(UI 구현 후 교체 예정)
-        if (Input.GetKey(KeyCode.S))
+        if (isDKeyPressed)
         {
-            topAnim.SetTrigger("gameStart");
-            bottomAnim.SetTrigger("gameStart");
-            StartCoroutine(MoveCrt());
-        }
-
-        #region 속도 테스트용 코드
-        if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            transform.position -= new Vector3(moveSpeed, 0f, 0f);
-        }
-
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            transform.position += new Vector3(moveSpeed, 0f, 0f);
-        }
-
-        if (Input.GetKey(KeyCode.U))
-        {
-            UpSpeed();
-        }
-        #endregion
-
-        // 점프
-        if (Input.GetKey(KeyCode.D) && canJump && IsOnGround())
-        {
+            isDKeyPressed = false;
+            rb.AddForce(Vector2.up * jumpForce);
             jumpCrt = JumpCrt();
             StartCoroutine(jumpCrt);
         }
 
-        // 성냥 던지기
-        if (canAttack && Input.GetKey(KeyCode.K))
-        {
-            attackCrt = AttackCrt();
-            StartCoroutine(attackCrt);
-        }
-
-        //// 슬라이드
-        //if (canSlide && Input.GetKey(KeyCode.Z) && !Input.GetKey(KeyCode.Space))
-        //{
-        //    Debug.Log("슬라이드");
-        //    slideCrt = SlideCrt();
-        //    StartCoroutine(slideCrt);
-        //}
+        if (transform.position.y < -5.0f) GameManager.Instance.GameOver();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        switch (collision.tag)
+        if (GameManager.Instance.IsPlaying())
         {
-            case "Potion":
-                playerLife = Mathf.Clamp(playerLife+1, 0, 3);
-                Debug.Log("life:"+playerLife);
-                collision.gameObject.SetActive(false);
-                break;
-            case "Obstacle":
+            if (collision.tag.Contains("Obstacle"))
+            {
                 if (!isInvincibleMode)
                 {
-                    collision.gameObject.SetActive(false);
-                    playerLife--;
-                    Debug.Log("life:" + playerLife);
-                    if (playerLife == 0)
-                    {
-
-                        SceneManager.LoadScene("GameOverScene");
-                        topAnim.SetTrigger("gameOver");
-                        bottomAnim.SetTrigger("gameOver");
-                    }
+                    // 생명 차감 및 무적모드
+                    GameManager.Instance.AddLifeNum(-1);
+                    isInvincibleMode = true;
+                    if (!collision.tag.Contains("Window")) collision.gameObject.SetActive(false);
                     StartCoroutine(DamageCrt());
                 }
-                break;
-            default:
-                break;
+            }
+            if (collision.tag.Equals("Potion"))
+            {
+                GameManager.Instance.AddLifeNum(1);
+                collision.gameObject.SetActive(false);
+            }
         }
     }
 
@@ -154,11 +179,12 @@ public class PlayerController : MonoBehaviour
 
     private void UpSpeed()
     {
-        topAnim.speed += speedUpValue;
-        bottomAnim.speed += speedUpValue;
+        speed = GameManager.Instance.GetStageSpeed();
+        topAnim.speed = speed;
+        bottomAnim.speed = speed;
     }
 
-    private bool IsOnGround()
+    public bool IsOnGround()
     {
         RaycastHit2D raycastHit = Physics2D.BoxCast(transform.position, boxCastSize, 0f, Vector2.down, boxCastMaxDistance, LayerMask.GetMask("Ground"));
         return (raycastHit.collider != null);
@@ -170,46 +196,49 @@ public class PlayerController : MonoBehaviour
         canJump = jump;
         //canSlide = slide;
     }
-    private void PlayerHP()
-    {
-        if (playerLife == 3)
-        {
-            objects[0].gameObject.SetActive(true);
-            objects[1].gameObject.SetActive(true);
-            objects[2].gameObject.SetActive(true);
-        }
-        if (playerLife == 2)
-        {
-            objects[0].gameObject.SetActive(true);
-            objects[1].gameObject.SetActive(true);
-            objects[2].gameObject.SetActive(false);
-        }
-        if (playerLife == 1)
-        {
-            objects[0].gameObject.SetActive(true);
-            objects[1].gameObject.SetActive(false);
-            objects[2].gameObject.SetActive(false);
-        }
-
-    }
-
 
     // 처음 시작 시 중앙으로 달림
-    private IEnumerator MoveCrt()
+    private IEnumerator MoveCenterCrt()
     {
         while (transform.position.x < 0)
         {
-            transform.position += new Vector3(moveSpeed, 0f, 0f);
-            yield return new WaitForSeconds(0.05f);
+            transform.position += new Vector3(speed, 0f, 0f);
+            yield return new WaitForSeconds(0.01f);
         }
+        GameManager.Instance.ChangePlayerCenterFlag(true);
     }
 
-    // 장애물에 부딪혔을 때
+    // 성냥 던질 때; 플레이어 애니메이션 변경, 1초 후 리셋
+    private IEnumerator AttackCrt()
+    {
+        SetState(false, true);
+        match.SetActive(true);
+        topAnim.speed = speed * 2;
+        topAnim.SetBool("isAttacking", true);
+
+        yield return new WaitForSeconds(1f);
+
+        match.SetActive(false);
+        topAnim.SetBool("isAttacking", false);
+        topAnim.speed = speed;
+
+        // 상,하체 싱크 맞춤
+        topAnim.Play("Player_Run_Top", -1, 0f);
+        bottomAnim.Play("Player_Run_Bottom", -1, 0f);
+
+        SetState(true, true);
+    }
+
+    // 장애물에 부딪혔을 때; 플레이어 애니메이션 변경, 깜빡임 효과 재생, 무적모드 적용
     private IEnumerator DamageCrt()
     {
-        isInvincibleMode = true;
+        topAnim.SetBool("isDamaged",true);
+        bottomAnim.SetBool("isDamaged", true);
+        yield return new WaitForSeconds(0.05f);
+        topAnim.SetBool("isDamaged", false);
+        bottomAnim.SetBool("isDamaged", false);
         float time = 0f;
-        while (time<invincibleTime)
+        while (time < invincibleTime)
         {
             time += Time.deltaTime;
             //Debug.Log("(Mathf.Cos(time) + 1) * 0.5f:"+ Mathf.Abs(Mathf.Cos(damageEffectSpeed*time) + 1) * 0.5f);
@@ -224,15 +253,22 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator JumpCrt()
     {
-        Debug.Log("점프");
+        GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.JUMP);
         SetState(true, false);
-        rb.AddForce(Vector2.up * jumpForce);
+        topAnim.gameObject.transform.position += new Vector3(0.15f, 0f, 0f);
+        topAnim.speed = GameManager.Instance.GetStageSpeed() * 2;
+        bottomAnim.speed = GameManager.Instance.GetStageSpeed() * 2;
         topAnim.SetBool("isJumping", true);
         bottomAnim.SetBool("isJumping", true);
+
         yield return new WaitForSeconds(0.01f);
-        while (!IsOnGround()) yield return null; 
+        while (!IsOnGround()) yield return null;
+
         bottomAnim.SetBool("isJumping", false);
         topAnim.SetBool("isJumping", false);
+        topAnim.speed = speed;
+        bottomAnim.speed = speed;
+        topAnim.gameObject.transform.position -= new Vector3(0.15f, 0f, 0f);
         SetState(true, true);
     }
 
@@ -244,20 +280,4 @@ public class PlayerController : MonoBehaviour
     //    transform.eulerAngles = Vector3.zero;
     //    SetState(true, true);
     //}
-
-    private IEnumerator AttackCrt()
-    {
-        Debug.Log("성냥 던지기");
-        SetState(false, true);
-        topAnim.SetBool("isAttacking", true);
-        match.SetActive(true);
-        yield return new WaitForSeconds(attackTime);
-        match.SetActive(false);
-        topAnim.SetBool("isAttacking", false);
-        topAnim.Play("Player_Run_Top", -1, 0f);
-        bottomAnim.Play("Player_Run_Bottom", -1, 0f);
-        SetState(true, true);
-    }
-
-   
 }

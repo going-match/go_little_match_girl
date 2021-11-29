@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Match : MonoBehaviour
 {
@@ -8,10 +9,10 @@ public class Match : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Window" && collision.gameObject!=lastWindow)
+        if (collision.tag.Contains("Window") && collision.gameObject!=lastWindow)
         {
             lastWindow = collision.gameObject;
-            Debug.Log("강매 성공!");
+            GameManager.Instance.AddScore(1);
         }
     }
 }

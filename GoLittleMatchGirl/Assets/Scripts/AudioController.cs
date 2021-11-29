@@ -9,18 +9,13 @@ public class AudioController : MonoBehaviour
 
     public enum AUDIO { 
         MAIN, INGAME, GAMEOVER, GAMECLEAR, BADEND, HAPPYEND, 
-        BUTTON, JUMP, WINDOW, ATTACK, POTION, OBSTACLE, SNOW }
+        BUTTON, JUMP, WINDOW, ARM, POTION, OBSTACLE, SNOW, SNOW2 }
 
     private void Awake()
     {
         audioSource = gameObject.GetComponent<AudioSource>();
         audioClip = new AudioClip[13];
         audioClip = Resources.LoadAll<AudioClip>("Audio");
-    }
-
-    private void OnEnable()
-    {
-        StartCoroutine(AudioCrt());
     }
 
     public void Play(AUDIO audio)
@@ -30,9 +25,23 @@ public class AudioController : MonoBehaviour
         audioSource.Play();
     }
 
-    private IEnumerator AudioCrt()
+    public void PlayAnother(AUDIO audio)
     {
-        yield return new WaitForSeconds(1f);
-        Play(AUDIO.MAIN);
+        audioSource.PlayOneShot(audioClip[(int)audio]);
+    }
+
+    public void Resume()
+    {
+        audioSource.Play();
+    }
+
+    public void Pause()
+    {
+        audioSource.Pause();
+    }
+
+    public void Stop()
+    {
+        audioSource.Stop();
     }
 }
