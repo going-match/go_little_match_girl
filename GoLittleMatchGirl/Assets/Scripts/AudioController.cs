@@ -5,7 +5,9 @@ using UnityEngine;
 public class AudioController : MonoBehaviour
 {
     private AudioSource audioSource;
-    private AudioClip[] audioClip;
+
+    public AudioClip[] audioClip = new AudioClip[12];
+    //private AudioClip[] audioClip;
 
     public enum AUDIO { 
         MAIN, INGAME, GAMEOVER, GAMECLEAR, BADEND, HAPPYEND, 
@@ -14,8 +16,8 @@ public class AudioController : MonoBehaviour
     private void Awake()
     {
         audioSource = gameObject.GetComponent<AudioSource>();
-        audioClip = new AudioClip[13];
-        audioClip = Resources.LoadAll<AudioClip>("Audio");
+        //audioClip = new AudioClip[13];
+        //audioClip = Resources.LoadAll<AudioClip>("Audio");
     }
 
     public void Play(AUDIO audio)

@@ -15,6 +15,7 @@ public class EndingUI : MonoBehaviour
     private Image[] optionButtonImg;    // 선택지 버튼 배경
 
     private bool isPrintEnd;
+    private bool isArrowKeyPressed;
     private int selectedOptionIndex;
     private int effectSpeed = 1;
 
@@ -65,6 +66,7 @@ public class EndingUI : MonoBehaviour
 
     private void OnEnable()
     {
+        isArrowKeyPressed = false;
         isPrintEnd = false;
         selectedOptionIndex = 1;
         string str = (GameManager.Instance.IsHappyEnd()) ? "Happy" : "Bad";
@@ -80,14 +82,19 @@ public class EndingUI : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
+                isArrowKeyPressed = true;
+                GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.BUTTON);
                 MoveHighlight(Vector2.left);
             }
             if (Input.GetKeyDown(KeyCode.RightArrow))
             {
+                isArrowKeyPressed = true;
+                GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.BUTTON);
                 MoveHighlight(Vector2.right);
             }
-            if (Input.GetKeyDown(KeyCode.Return))
+            if (isArrowKeyPressed && Input.GetKeyDown(KeyCode.Return))
             {
+                GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.BUTTON);
                 if (selectedOptionIndex == 0)
                 {
                     GameManager.Instance.ChangeScene(GameManager.SCENE.INGAME);

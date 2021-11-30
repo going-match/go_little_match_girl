@@ -711,7 +711,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e97d00e5149f0024fbd2a3ce9a842046, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ac4905823785a314dbbffa168a8a0268, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2375,7 +2375,7 @@ GameObject:
   - component: {fileID: 203280015}
   m_Layer: 0
   m_Name: Stove (1)
-  m_TagString: Obstacle
+  m_TagString: StoveObstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3367,7 +3367,7 @@ GameObject:
   - component: {fileID: 329855385}
   m_Layer: 0
   m_Name: Stove (2)
-  m_TagString: Obstacle
+  m_TagString: StoveObstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -12940,7 +12940,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e97d00e5149f0024fbd2a3ce9a842046, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ac4905823785a314dbbffa168a8a0268, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -14228,7 +14228,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1023480014
 Transform:
   m_ObjectHideFlags: 0
@@ -14716,7 +14716,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1055197966
 Transform:
   m_ObjectHideFlags: 0
@@ -27944,7 +27944,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1455313835
 Transform:
   m_ObjectHideFlags: 0
@@ -33991,7 +33991,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1631152211
 Transform:
   m_ObjectHideFlags: 0
@@ -36733,11 +36733,21 @@ MonoBehaviour:
   - {fileID: 21300000, guid: d610822ed3bc06b4b9b747e1ff31ceda, type: 3}
   - {fileID: 21300000, guid: cb0775ab3ef7ce74ca083adfd25743c2, type: 3}
   - {fileID: 21300000, guid: f3702de7f120d2043b21cf71151766e2, type: 3}
-  windowSprite:
+  windowOffSprite:
   - {fileID: 21300000, guid: b849b633f8a76a94fae92d46325ba20b, type: 3}
+  - {fileID: 21300000, guid: dff9dbb070f6870448a2de35acd885e9, type: 3}
+  - {fileID: 21300000, guid: b1ce471b71f17984e8c9620e615df160, type: 3}
+  windowOnSprite:
   - {fileID: 21300000, guid: 9bd879b11d220fc42ac91bf61c65b287, type: 3}
-  - {fileID: 21300000, guid: d932019dc6889804389ce9e5c063c8f5, type: 3}
   - {fileID: 21300000, guid: 69067ff21600e6744921f2e73eedcc55, type: 3}
+  - {fileID: 21300000, guid: b1ce471b71f17984e8c9620e615df160, type: 3}
+  windowObstacleSprite:
+  - {fileID: 21300000, guid: 710ed8cd153ba7747963f8ad2f0fa510, type: 3}
+  - {fileID: 21300000, guid: 279cd23762223184d898e2206e293873, type: 3}
+  - {fileID: 21300000, guid: bf4eecfa460b2694f89393d051d89966, type: 3}
+  - {fileID: 21300000, guid: 0671f3515f4f6de4e8857162d4bf2acd, type: 3}
+  - {fileID: 21300000, guid: a530eb63075823b438251ceb192c7d34, type: 3}
+  - {fileID: 21300000, guid: 6e1c81662a9c9194a86189645e9c1375, type: 3}
 --- !u!4 &2007382611
 Transform:
   m_ObjectHideFlags: 0
@@ -36890,7 +36900,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e97d00e5149f0024fbd2a3ce9a842046, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ac4905823785a314dbbffa168a8a0268, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

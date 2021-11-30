@@ -6,7 +6,9 @@ public class MapController : MonoBehaviour
 {
     [SerializeField] private GameObject player;
     [SerializeField] private Sprite[] roofSprite = new Sprite[3];
-    [SerializeField] private Sprite[] windowSprite = new Sprite[4];     // 불꺼진창문, 불켜진(일반/리스/칠면조)창문
+    [SerializeField] private Sprite[] windowOffSprite = new Sprite[3];  // 불 꺼진 창문(3종류)
+    [SerializeField] private Sprite[] windowOnSprite = new Sprite[3];  // 불 켜진 창문(3종류)
+    [SerializeField] private Sprite[] windowObstacleSprite = new Sprite[6];     // 불 켜진 장애물(리스/칠면조) 창문 (각 3종류)
 
     private GameObject[] map;
     private GameObject[,] floor;
@@ -28,19 +30,15 @@ public class MapController : MonoBehaviour
     private int floorNum = 3;
     private int buildingBlockNum = 3;
     private int windowNum = 6;
+    private int windowTypeNum = 3;
 
-    private float playerPosOffset = 4f;
-
-    private bool isObjectLoaded = false;
-
-    private List<int>[] activeTileList;
+    private float windowObstaclePercentage = 0.1f;
+    private float floorFullPercentage = 0.7f;
 
     private float speed;
 
     private void Awake()
     {
-        activeTileList = new List<int>[floorNum];
-
         map = new GameObject[transform.childCount];
         floor = new GameObject[mapNum, floorNum];
         building = new GameObject[mapNum, buildingNum];
@@ -108,7 +106,7 @@ public class MapController : MonoBehaviour
             {
                 int randType = Random.Range(0, 2);
 
-                windowSR[0, i, j].sprite = windowSprite[randType];
+                windowSR[0, i, j].sprite = windowOnSprite[randType];
                 window[0, i, j].tag = ((randType == 1) ? "Window" : "Untagged");
             }
         }
@@ -118,11 +116,13 @@ public class MapController : MonoBehaviour
     {
         if (GameManager.Instance.IsPlaying() && GameManager.Instance.IsPlayerCenter())
         {
+            speed = GameManager.Instance.GetStageSpeed();
+
             // 맵 이동 및 세팅
-            for(int i=0; i<mapNum; i++)
+            for (int i=0; i<mapNum; i++)
             {
                 Vector3 pos = map[i].transform.position;
-                pos.x -= (Time.deltaTime * speed*50f);
+                pos.x -= (Time.deltaTime * speed * 5f);
 
                 // 해당 맵이 맨 오른쪽 끝으로 갈 때 맵 세팅
                 if (pos.x < -20)
@@ -171,25 +171,33 @@ public class MapController : MonoBehaviour
             // 층수에 맞게 활성화/비활성화 결정
             window[mIndex, bIndex, i].SetActive(i < f*2);
 
-            windowSR[mIndex, bIndex, i].sprite = windowSprite[0];
+            // 창문 타입 결정
+            int randType = Random.Range(0, windowTypeNum);
+            windowSR[mIndex, bIndex, i].sprite = windowOffSprite[randType];
             window[mIndex, bIndex, i].tag = "Untagged";
         }
 
         // 창문 종류 결정(최대 3개 활성화)
         for (int i=0; i<3; i++)
         {
+            // 바꿀 창문 인덱스 결정
             int randIndex = Random.Range(0, windowNum);
-            int randType = Random.Range(1, windowSprite.Length);
-            windowSR[mIndex, bIndex, randIndex].sprite = windowSprite[randType];
-            if (randType == 1)
+
+            // 기준점보다 작은값이 나오면 장애물 창문, 그렇지 않으면 불켜진 일반창문
+            float obstacleRand = Random.Range(0f, 1f);
+            if (obstacleRand <= windowObstaclePercentage)
             {
-                // 불켜진 일반 창문
-                window[mIndex, bIndex, randIndex].tag = "Window";
+                window[mIndex, bIndex, randIndex].tag = "WindowObstacle";
+                // 창문 타입 결정
+                int randType = Random.Range(0, windowTypeNum*2);
+                windowSR[mIndex, bIndex, randIndex].sprite = windowObstacleSprite[randType];
             }
             else
             {
-                // 불켜진 장애물 창문
-                window[mIndex, bIndex, randIndex].tag = "WindowObstacle";
+                window[mIndex, bIndex, randIndex].tag = "Window";
+                // 창문 타입 결정
+                int randType = Random.Range(0, windowTypeNum);
+                windowSR[mIndex, bIndex, randIndex].sprite = windowOnSprite[randType];
             }
         }
     }
@@ -197,24 +205,52 @@ public class MapController : MonoBehaviour
     // 한 층의 타일 세팅; 활성화 여부 결정
     private void SetFloor(int mIndex, int fIndex)
     {
-        // 활성화/비활성화 상태 초기화
+        // 타일 초기화(활성화)
         for(int i=0; i<tileNum; i++)
         {
             tile[mIndex, fIndex, i].SetActive(true);
         }
 
-        // 바닥층의 경우 연속 빈칸 수: 1~2 (그 이상은 난이도상 문제 있을 수 있음)
-        if (fIndex == 0)
+        // 해당 층의 타일 수 결정(0~3)
+        int randTileNum = Random.Range(0, 4);
+        int randIndex = 0;
+
+        // 바닥층이거나 타일수 2개인 경우 0~3번째 중 한칸 비활성화
+        if (fIndex == 0 || randTileNum==2)
         {
-            //(임시)일단은 1개만 비활성화해봄
-            int randIndex = Random.Range(0,tileNum);
+            randIndex = Random.Range(0, tileNum - 1);
             tile[mIndex, fIndex, randIndex].SetActive(false);
         }
-        else
+
+        // 바닥층 특정 확률로 빈칸 없앰
+        if (fIndex == 0)
         {
-            //(임시)일단은 1개만 비활성화해봄
-            int randIndex = Random.Range(0, tileNum);
-            tile[mIndex, fIndex, randIndex].SetActive(false);
+            float rand = Random.Range(0f, 1f);
+            if(rand<=floorFullPercentage) tile[mIndex, fIndex, randIndex].SetActive(true);
+        }
+
+        // 바닥층이 아닐 경우
+        if (fIndex != 0)
+        {
+            tile[mIndex, fIndex, 4].SetActive(false);
+
+            if (randTileNum < 2)
+            {
+                randIndex = Random.Range(0, tileNum - 1);
+
+                if (randTileNum == 0) tile[mIndex, fIndex, randIndex].SetActive(false);
+                for (int i = 0; i < tileNum - 1; i++)
+                {
+                    if (i != randIndex) tile[mIndex, fIndex, i].SetActive(false);
+                }
+            }
+            else
+            {
+                // 타일수 2,3개인 경우 1~2번째 중 한칸 비활성화
+                // 앞에서 비활성화된 인덱스와 중복되었어도 신경쓰지 않음
+                randIndex = Random.Range(1, 3);
+                tile[mIndex, fIndex, randIndex].SetActive(false);
+            }
         }
     }
 }

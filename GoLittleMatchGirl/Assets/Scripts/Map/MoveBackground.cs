@@ -17,7 +17,7 @@ public class MoveBackground : MonoBehaviour
     {
         if (GameManager.Instance.IsPlaying() && GameManager.Instance.IsPlayerCenter())
         {
-            offset += Time.deltaTime * GameManager.Instance.GetStageSpeed() * 5f;
+            offset += Time.deltaTime * GameManager.Instance.GetStageSpeed() * 0.5f;
             render.material.mainTextureOffset = new Vector2(offset, 0);
         }
     }

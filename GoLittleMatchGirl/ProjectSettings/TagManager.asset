@@ -9,6 +9,7 @@ TagManager:
   - Obstacle
   - Ground
   - WindowObstacle
+  - StoveObstacle
   layers:
   - Default
   - TransparentFX

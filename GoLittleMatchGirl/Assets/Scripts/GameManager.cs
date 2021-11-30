@@ -15,14 +15,12 @@ public class GameManager : MonoBehaviour
     [Range(1, 3)]
     public int readyTxtEffectSpeed;
 
-    private IEnumerator inGameCrt;
     private Text readyTxt;
 
-    private bool isStarted;                 // 게임 시작 여부
-    private bool isPlaying;                 // 인게임 시간흐름 제어
-    private bool isClear;                   // 게임 클리어 여부
-    private bool isPaused;
-    private bool isPlayerCenter;            // 게임 시작 시 플레이어가 화면의 중앙에 위치했는지 여부
+    private PLAYMODE state;                 // 인게임 플레이 상태
+
+    private bool isClear;                   // 게임 클리어(완주) 여부
+    private bool isCenter;            // 게임 시작 시 플레이어가 화면의 중앙에 위치했는지 여부
 
     private int stage;                      // 인게임 현재 단계(=속도)
     private int lifeNum;                    // 플레이어 생명 개수
@@ -31,8 +29,10 @@ public class GameManager : MonoBehaviour
     private float spendTime;                // 인게임 소요시간
     private float endTime;                  // 인게임 종료시간
 
-    private float[] stageSpeed = { 0.15f, 0.2f, 0.25f };
-    private int[] stageBoundary = { 53, 160 };
+    private float[] stageSpeed = { 1.5f, 2.0f, 2.5f };
+    private int[] stageBoundary = { 53, 106 };
+
+    public enum PLAYMODE { READY, PLAY, PAUSE, END }
 
     public enum SCENE { MAIN, INGAME, RESULT, ENDING, };
 
@@ -79,10 +79,30 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= LoadedSceneEvent;
     }
 
+    private void Update()
+    {
+        if (spendTime < endTime)
+        {
+            // 플레이 중 시간 카운트
+            if (state==PLAYMODE.PLAY) spendTime += Time.deltaTime;
+
+            // 각 스테이지 기준점을 넘길 때마다 난이도 조정
+            if (stage < 2 && spendTime > stageBoundary[stage])
+            {
+                stage++;
+                inGameUI.SetFillAreaColor(stage);
+            }
+        }
+        else if (state == PLAYMODE.PLAY)
+        {
+            state = PLAYMODE.END;
+            ShowResult();
+        }
+    }
+
     public void ResetStage()
     {
-        isStarted = false;
-        isPlaying = false;
+        state = PLAYMODE.READY;
         isClear = true;
 
         stage = 0;
@@ -90,34 +110,31 @@ public class GameManager : MonoBehaviour
         score = 0;
         goal = 20;
         spendTime = 0f;
-        endTime = 180f;
+        endTime = 159f;
     }
 
     public void StartPlay()
     {
         readyPanel.SetActive(false);
-        inGameCrt = TimeCrt();
-        StartCoroutine(inGameCrt);
-        isStarted = true;
-        isPlaying = true;
+        state = PLAYMODE.PLAY;
         audioController.Play(AudioController.AUDIO.INGAME);
     }
 
     public void Resume()
     {
+        Time.timeScale = 1f;
         Debug.Log("게임 재개");
         pausePanel.SetActive(false);
-        isPlaying = true;
-        isPaused = false;
+        state = PLAYMODE.PLAY;
         audioController.Resume();
     }
 
     public void Pause()
     {
+        Time.timeScale = 0f;
         Debug.Log("일시정지");
         pausePanel.SetActive(true);
-        isPlaying = false;
-        isPaused = true;
+        state = PLAYMODE.PAUSE;
         audioController.Pause();
     }
 
@@ -131,14 +148,14 @@ public class GameManager : MonoBehaviour
     public void ShowResult()
     {
         Debug.Log("플레이 결과 표시");
-        isPlaying = false;
-        StopCoroutine(inGameCrt);
+
         ChangeScene(SCENE.RESULT);
     }
 
     public void AddScore(int value)
     {
         score += value;
+        if (score < 0) score = 0;
         inGameUI.SetScoreTxt(score);
         audioController.PlayAnother(AudioController.AUDIO.ARM);
         audioController.PlayAnother(AudioController.AUDIO.WINDOW);
@@ -157,24 +174,29 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public bool IsStarted()
+    public  PLAYMODE GetState()
     {
-        return isStarted;
+        return state;
+    }
+
+    public bool isReady()
+    {
+        return state == PLAYMODE.READY;
     }
 
     public bool IsPlaying()
     {
-        return isPlaying;
+        return state == PLAYMODE.PLAY;
     }
 
     public bool IsPaused()
     {
-        return isPaused;
+        return state == PLAYMODE.PAUSE;
     }
 
     public bool IsPlayerCenter()
     {
-        return isPlayerCenter;
+        return isCenter;
     }
 
     public bool IsClear()
@@ -214,7 +236,7 @@ public class GameManager : MonoBehaviour
 
     public void ChangePlayerCenterFlag(bool value)
     {
-        isPlayerCenter = value;
+        isCenter = value;
     }
 
     public void ChangeScene(SCENE scene)
@@ -256,30 +278,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 플레이 중 시간 카운트. 끝나면 결과 씬 로드
-    private IEnumerator TimeCrt()
-    {
-        while (spendTime<endTime)
-        {
-            // 플레이 중 시간 카운트
-            if (isPlaying) spendTime += Time.deltaTime;
-            //Debug.Log("spendtime:"+spendTime);
-
-            // 각 스테이지 기준점을 넘길 때마다 난이도 조정
-            if (stage<2 && spendTime > stageBoundary[stage])
-            {
-                stage++;
-                inGameUI.SetFillAreaColor(stage);
-            }
-            yield return null;
-        }
-        ShowResult();
-    }
-
     private IEnumerator ReadyTextEffectCrt()
     {
         float time = 0f;
-        while (!isPlaying)
+        while (state==PLAYMODE.READY)
         {
             readyTxt.color = new Color(1f, 1f, 1f, Mathf.Abs(Mathf.Cos(readyTxtEffectSpeed * time)) * 0.5f + 0.5f);
             time += Time.deltaTime;

@@ -49,12 +49,11 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         // 게임 시작 전
-        if (!GameManager.Instance.IsStarted() && Input.GetKeyDown(KeyCode.Return))
+        if (GameManager.Instance.isReady() && Input.GetKeyDown(KeyCode.Return))
         {
             GameManager.Instance.StartPlay();
             topAnim.SetTrigger("gameStart");
             bottomAnim.SetTrigger("gameStart");
-            StartCoroutine(MoveCenterCrt());
         }
 
         // 게임 실행 중
@@ -77,22 +76,24 @@ public class PlayerController : MonoBehaviour
             //}
             #endregion
 
+            speed = GameManager.Instance.GetStageSpeed();
+
+            if(Mathf.Abs(transform.position.x - 0f)>0.1f)
+            {
+                int direction = ((transform.position.x < 0f) ? 1 : -1);
+                transform.position += new Vector3(direction * speed * 0.1f, 0f, 0f);
+            }
+            else GameManager.Instance.ChangePlayerCenterFlag(true);
+
             // ESC 키 누름; 게임 일시정지
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                topAnim.speed = 0f;
-                bottomAnim.speed = 0f;
                 GameManager.Instance.Pause();
             }
 
             // 점프
-            if (Input.GetKeyDown(KeyCode.D))
-            {
-                Debug.Log("just d");
-            }
             if (Input.GetKeyDown(KeyCode.D) && canJump && IsOnGround())
             {
-                Debug.Log("d");
                 isDKeyPressed = true;
             }
 
@@ -149,7 +150,8 @@ public class PlayerController : MonoBehaviour
                     // 생명 차감 및 무적모드
                     GameManager.Instance.AddLifeNum(-1);
                     isInvincibleMode = true;
-                    if (!collision.tag.Contains("Window")) collision.gameObject.SetActive(false);
+                    if (collision.tag.Equals("Obstacle")) collision.gameObject.SetActive(false);
+                    if(collision.tag.Contains("Stove")) GameManager.Instance.AddScore(-1);
                     StartCoroutine(DamageCrt());
                 }
             }
@@ -198,29 +200,28 @@ public class PlayerController : MonoBehaviour
     }
 
     // 처음 시작 시 중앙으로 달림
-    private IEnumerator MoveCenterCrt()
-    {
-        while (transform.position.x < 0)
-        {
-            transform.position += new Vector3(speed, 0f, 0f);
-            yield return new WaitForSeconds(0.01f);
-        }
-        GameManager.Instance.ChangePlayerCenterFlag(true);
-    }
+    //private IEnumerator MoveCenterCrt()
+    //{
+    //    while (transform.position.x < 0)
+    //    {
+    //        transform.position += new Vector3(speed*0.1f, 0f, 0f);
+    //        yield return new WaitForSeconds(0.01f);
+    //    }
+    //    GameManager.Instance.ChangePlayerCenterFlag(true);
+    //}
 
     // 성냥 던질 때; 플레이어 애니메이션 변경, 1초 후 리셋
     private IEnumerator AttackCrt()
     {
         SetState(false, true);
-        match.SetActive(true);
-        topAnim.speed = speed * 2;
         topAnim.SetBool("isAttacking", true);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.10f * (speed - 0.5f));
+        match.SetActive(true);
 
+        yield return new WaitForSeconds(0.14f * (speed - 0.5f));
         match.SetActive(false);
         topAnim.SetBool("isAttacking", false);
-        topAnim.speed = speed;
 
         // 상,하체 싱크 맞춤
         topAnim.Play("Player_Run_Top", -1, 0f);
@@ -241,7 +242,6 @@ public class PlayerController : MonoBehaviour
         while (time < invincibleTime)
         {
             time += Time.deltaTime;
-            //Debug.Log("(Mathf.Cos(time) + 1) * 0.5f:"+ Mathf.Abs(Mathf.Cos(damageEffectSpeed*time) + 1) * 0.5f);
             topSR.color = new Color(1f, 0.5f, 0.5f, Mathf.Abs(Mathf.Cos(damageEffectSpeed * time)) * 0.5f + 0.5f);
             bottomSR.color = new Color(1f, 0.5f, 0.5f, Mathf.Abs(Mathf.Cos(damageEffectSpeed * time)) * 0.5f + 0.5f);
             yield return null;
@@ -256,8 +256,6 @@ public class PlayerController : MonoBehaviour
         GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.JUMP);
         SetState(true, false);
         topAnim.gameObject.transform.position += new Vector3(0.15f, 0f, 0f);
-        topAnim.speed = GameManager.Instance.GetStageSpeed() * 2;
-        bottomAnim.speed = GameManager.Instance.GetStageSpeed() * 2;
         topAnim.SetBool("isJumping", true);
         bottomAnim.SetBool("isJumping", true);
 
@@ -266,8 +264,6 @@ public class PlayerController : MonoBehaviour
 
         bottomAnim.SetBool("isJumping", false);
         topAnim.SetBool("isJumping", false);
-        topAnim.speed = speed;
-        bottomAnim.speed = speed;
         topAnim.gameObject.transform.position -= new Vector3(0.15f, 0f, 0f);
         SetState(true, true);
     }

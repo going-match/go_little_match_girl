@@ -59,14 +59,17 @@ public class ResultUI : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
+                GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.BUTTON);
                 MoveHighlight(Vector2.left);
             }
             if (Input.GetKeyDown(KeyCode.RightArrow))
             {
+                GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.BUTTON);
                 MoveHighlight(Vector2.right);
             }
             if (Input.GetKeyDown(KeyCode.Return))
             {
+                GameManager.Instance.audioController.PlayAnother(AudioController.AUDIO.BUTTON);
                 if (selectedOptionIndex == 0)
                 {
                     GameManager.Instance.ChangeScene(GameManager.SCENE.INGAME);
